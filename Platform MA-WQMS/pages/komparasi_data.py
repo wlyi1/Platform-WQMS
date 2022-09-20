@@ -10,19 +10,25 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.engine import URL
 from numpy import load
 
+files_id = pd.read_csv('id_stasiun.csv')
+
 data_24 = load('jam_24.npy', allow_pickle = True)
 df_nan = pd.read_csv('df_nan.csv')
 index = np.arange(1,25)
 df_test = pd.read_csv('testml.csv')
 
+ID_choice = st.selectbox('Stasiun', files_id['CODE'])
+ID = files_id[files_id['CODE']==ID_choice].index.values + 10
+st.write(ID)
 
+#import data from SQL Server
 conn_str = 'DRIVER={SQL Server};server=DESKTOP-ELAQ9RU\SQLEXPRESS;Database=awlr_mondylia;Trusted_Connection=yes;'
 con_url = URL.create('mssql+pyodbc', query={'odbc_connect': conn_str})
 engine = create_engine(con_url)
 
-#import data from SQL Server
-query = """select pH, DO, Cond, Turb, Temp, NH4,NO3,ORP,COD,BOD,TSS,logTime as NH3_N,logDate, datepart(hour, logTime) as logTime 
-from periodicdata where Station=12 order by logDate,logTime"""
+query = f"""select pH, DO, Cond, Turb, Temp, NH4,NO3,ORP,COD,BOD,TSS,logTime as NH3_N,logDate, datepart(hour, logTime) as logTime 
+from periodicdata where Station={int(ID)} order by logDate,logTime"""
+
 df = pd.read_sql(query, engine)
 df['logDate'] = pd.to_datetime(df['logDate']).dt.date
 
@@ -34,6 +40,9 @@ df = df.loc[(df['logDate'] >= date.fromisoformat('2021-09-21'))]
 
 tanggal = np.unique(df['logDate'].values)
 j = len(tanggal)
+
+#ID Stasiun KLHK
+
 
 #array data daily
 arr = []
